@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f5f7fa">
+<title>Evidencija zahteva – Opština Velika Plana</title>
+<style>
+:root{color-scheme:light;--ink:#182230;--muted:#667085;--line:#e3e8ef;--blue:#174ea6;--bg:#f5f7fa;--green:#137547;--greenbg:#e8f6ee;--amber:#986400;--amberbg:#fff5dc}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 16px 60px}
+header,.panel,.request{background:#fff;border:1px solid var(--line);border-radius:18px}
+header{padding:26px;margin-bottom:18px}
+.eyebrow{font-size:12px;font-weight:750;letter-spacing:.09em;color:var(--blue);text-transform:uppercase;margin:0 0 8px}
+h1{font-size:clamp(27px,5vw,39px);line-height:1.12;margin:0 0 12px}
+.lead{color:var(--muted);margin:0;max-width:720px}
+nav{display:flex;gap:16px;flex-wrap:wrap;margin-top:18px}nav a,.back{color:var(--blue);font-weight:650;text-decoration:none}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px}
+.stat strong{display:block;font-size:28px;line-height:1.2}.stat span{font-size:13px;color:var(--muted)}
+.panel{padding:16px;margin-bottom:16px}
+.controls{display:grid;grid-template-columns:1fr auto;gap:12px}
+input{width:100%;min-width:0;padding:12px 13px;border:1px solid #cfd6e0;border-radius:10px;font:inherit;background:#fff}
+.filters{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.filters button,.refresh{border:1px solid var(--line);border-radius:999px;padding:8px 13px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+.filters button[aria-pressed=true]{background:#eaf1ff;border-color:#b8cdf7;color:var(--blue);font-weight:700}
+.refresh{background:var(--blue);color:white;border-color:var(--blue);border-radius:10px;font-weight:650}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:13px;margin:12px 2px}
+.list{display:grid;gap:12px}
+.request{padding:18px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.date{font-size:13px;color:var(--muted);font-weight:650}
+.badge{font-size:12px;font-weight:750;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.badge.waiting{background:var(--amberbg);color:var(--amber)}.badge.answered{background:var(--greenbg);color:var(--green)}
+h2{font-size:18px;line-height:1.35;margin:0 0 6px}
+.institution{font-size:14px;color:var(--muted);margin:0 0 14px}
+.details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.detail span{display:block;color:var(--muted);font-size:12px}.detail strong{font-size:14px;font-weight:650}
+.note{background:#f7f9fc;border-radius:10px;padding:11px 12px;margin-top:12px;font-size:14px;color:#344054}
+.empty,.error{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--muted)}
+footer{font-size:13px;color:var(--muted);margin-top:22px}
+@media(max-width:600px){.wrap{padding:16px 12px 40px}header{padding:20px}.stats{gap:7px}.stat{padding:11px}.stat strong{font-size:24px}.controls{grid-template-columns:1fr}.refresh{width:100%}.details{grid-template-columns:1fr 1fr}.request{padding:15px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header>
+<p class="eyebrow">Javno praćenje · Velika Plana</p>
+<h1>Evidencija zahteva za informacije od javnog značaja</h1>
+<p class="lead">Pregled podnetih zahteva, ustanova kojima su upućeni, rokova za postupanje i primljenih odgovora. Podaci se učitavaju iz evidencije i automatski osvežavaju.</p>
+<nav><a href="index.html">← Obrasci zahteva</a></nav>
+</header>
+
+<section class="stats" aria-label="Sažetak evidencije">
+<div class="stat"><strong id="total">—</strong><span>Ukupno zahteva</span></div>
+<div class="stat"><strong id="waiting">—</strong><span>Čekaju odgovor</span></div>
+<div class="stat"><strong id="answered">—</strong><span>Odgovor primljen</span></div>
+</section>
+
+<section class="panel">
+<div class="controls">
+<input id="search" type="search" placeholder="Pretraži po ustanovi ili predmetu…" aria-label="Pretraga zahteva">
+<button class="refresh" id="refresh" type="button">Osveži podatke ↻</button>
+</div>
+<div class="filters" role="group" aria-label="Filter statusa">
+<button type="button" data-filter="all" aria-pressed="true">Svi zahtevi</button>
+<button type="button" data-filter="waiting" aria-pressed="false">Čekaju odgovor</button>
+<button type="button" data-filter="answered" aria-pressed="false">Odgovor primljen</button>
+</div>
+<div class="meta"><span id="count">Učitavanje evidencije…</span><span id="updated"></span></div>
+</section>
+
+<section id="list" class="list" aria-live="polite"><div class="empty">Učitavanje zahteva iz baze…</div></section>
+<footer>Prikaz sadrži samo osnovne podatke o predmetima. Tekstovi zahteva, kontakt-podaci podnosioca i interne beleške nisu javno prikazani. Status „odgovor primljen” ne znači nužno da je sva prateća dokumentacija već objavljena.</footer>
+</main>
+<script>
+const API_URL = "https://hmfeizkmpmxcnzhwxgbn.supabase.co/functions/v1/public-iojz-list";
+const API_KEY = "sb_publishable_JPtLezaiIeq4MsQ2f3LSlg_nT01Chxe";
+let requests = [];
+let activeFilter = "all";
+const list = document.getElementById("list");
+const search = document.getElementById("search");
+
+function dateText(value){
+  if(!value) return "Nije evidentirano";
+  const d = new Date(value + "T00:00:00");
+  return Number.isNaN(d.getTime()) ? value : new Intl.DateTimeFormat("sr-RS").format(d);
+}
+function esc(value){
+  return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function statusText(status){return status === "answered" ? "Odgovor primljen" : "Čeka odgovor";}
+function render(){
+  const q = search.value.trim().toLocaleLowerCase("sr");
+  const filtered = requests.filter(r => {
+    const matchStatus = activeFilter === "all" || r.status === activeFilter;
+    const haystack = (r.institution_name + " " + r.subject + " " + r.action_title).toLocaleLowerCase("sr");
+    return matchStatus && haystack.includes(q);
+  });
+  document.getElementById("total").textContent = requests.length;
+  document.getElementById("waiting").textContent = requests.filter(r=>r.status==="waiting").length;
+  document.getElementById("answered").textContent = requests.filter(r=>r.status==="answered").length;
+  document.getElementById("count").textContent = "Prikazano " + filtered.length + " od " + requests.length + " zahteva";
+  if(!filtered.length){
+    list.innerHTML = '<div class="empty">Nema zahteva koji odgovaraju izabranom filteru ili pretrazi.</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(r => {
+    const extended = !!r.extension_due_at;
+    const deadline = extended ? r.extension_due_at : r.deadline_due_at;
+    const deadlineLabel = r.status === "answered" ? "Odgovor" : (extended ? "Produženi rok" : "Rok za odgovor");
+    let note = "";
+    if(r.extension_due_at) note = "Rok je produžen obaveštenjem od " + dateText(r.extension_notice_date) + (r.extension_deadline_days ? " (produženje " + r.extension_deadline_days + " dana)" : "") + ".";
+    if(r.id === "9d4a33cd-2648-4109-9f62-2a1b60226e7a") note = "Odgovor je primljen. Skeniranje i objavljivanje dokumentacije još predstoje.";
+    if(r.id === "4bed3ef0-0684-4f1e-b036-0171e2bc317e" && r.reference_number) note = "Primljeni odgovori evidentirani pod brojem " + esc(r.reference_number) + ".";
+    if(r.id === "2c587f44-87f5-42b6-a8bb-37dc5cc8f4cf") note = "Datum slanja je privremeno evidentiran i čeka potvrdu.";
+    const dateLabel = r.status === "answered" ? (r.response_date ? "Odgovor primljen " + dateText(r.response_date) : "Odgovor primljen") : "";
+    return '<article class="request"><div class="top"><span class="date">PODNETO: ' + dateText(r.sent_at) + '</span><span class="badge ' + (r.status==="answered"?"answered":"waiting") + '">' + statusText(r.status) + '</span></div>' +
+      '<h2>' + esc(r.subject || r.action_title) + '</h2><p class="institution">' + esc(r.institution_name) + '</p>' +
+      '<div class="details"><div class="detail"><span>' + deadlineLabel + '</span><strong>' + (r.status==="answered" ? esc(dateLabel) : dateText(deadline)) + '</strong></div>' +
+      '<div class="detail"><span>Datum prijema zahteva</span><strong>' + dateText(r.received_at) + '</strong></div></div>' +
+      (note ? '<div class="note">' + note + '</div>' : '') + '</article>';
+  }).join("");
+}
+async function load(){
+  const button = document.getElementById("refresh");
+  button.disabled = true; button.textContent = "Učitavanje…";
+  try{
+    const response = await fetch(API_URL, {headers:{apikey:API_KEY}});
+    if(!response.ok) throw new Error("HTTP " + response.status);
+    const payload = await response.json();
+    requests = Array.isArray(payload.requests) ? payload.requests : [];
+    render();
+    document.getElementById("updated").textContent = "Osveženo: " + new Intl.DateTimeFormat("sr-RS",{hour:"2-digit",minute:"2-digit"}).format(new Date());
+  }catch(error){
+    list.innerHTML = '<div class="error">Trenutno nije moguće učitati podatke. Pokušajte ponovo za nekoliko trenutaka.</div>';
+    document.getElementById("count").textContent = "Evidencija nije učitana";
+  }finally{
+    button.disabled = false; button.textContent = "Osveži podatke ↻";
+  }
+}
+search.addEventListener("input",render);
+document.querySelectorAll("[data-filter]").forEach(button => button.addEventListener("click",()=>{
+  activeFilter = button.dataset.filter;
+  document.querySelectorAll("[data-filter]").forEach(b=>b.setAttribute("aria-pressed",String(b===button)));
+  render();
+}));
+document.getElementById("refresh").addEventListener("click",load);
+load();
+setInterval(load,60000);
+</script>
+</body>
+</html>
